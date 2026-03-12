@@ -3,6 +3,7 @@ import unicodedata
 from pathlib import Path
 
 from django.conf import settings
+from django.db import connection
 
 from .models import MonsterCard
 
@@ -15,8 +16,13 @@ def _slugify(value: str) -> str:
 
 
 def seed_cards():
-    data_path = Path(settings.BASE_DIR) / 'data' / 'cards.json'
+    table_name = MonsterCard._meta.db_table
+    existing_tables = connection.introspection.table_names()
 
+    if table_name not in existing_tables:
+        return
+
+    data_path = Path(settings.BASE_DIR) / 'data' / 'cards.json'
     if not data_path.exists():
         return
 
