@@ -177,6 +177,7 @@ function renderBoard() {
       const enemyUnit = findUnitAt(enemy?.units, x, y);
       const unit = ownUnit || enemyUnit;
       const ownerClass = ownUnit ? 'ally' : (enemyUnit ? 'enemy' : 'empty');
+      const squareClass = (x + y) % 2 === 0 ? 'square-light' : 'square-dark';
       const key = `${x},${y}`;
       const canSummon = Boolean(selectedHandCard) && summonRows.includes(y) && !unit && isMyTurn(mySide);
       const canMoveHere = moveTargets.has(key) && isMyTurn(mySide);
@@ -185,7 +186,7 @@ function renderBoard() {
       const hintClass = canSummon ? 'hint-summon' : canMoveHere ? 'hint-move' : canAttackThis ? 'hint-attack' : '';
 
       cells.push(`
-        <button class="cell ${ownerClass} ${hintClass} ${isSelected ? 'selected' : ''}" data-x="${x}" data-y="${y}">
+        <button class="cell ${squareClass} ${ownerClass} ${hintClass} ${isSelected ? 'selected' : ''}" data-x="${x}" data-y="${y}">
           <div class="coord">${x},${y}</div>
           ${unit
             ? `<div class="token"><strong>${unit.card.name}</strong><span>#${shortId(unit.id)}</span><span>PdV ${unit.hp_current} · PdC ${unit.shell_current}</span><span>PA ${unit.pa_current} · PM ${unit.pm_current}</span></div>`
@@ -194,7 +195,9 @@ function renderBoard() {
       `);
     }
   }
-  $('#board').innerHTML = cells.join('');
+  const boardEl = $('#board');
+  boardEl.style.gridTemplateColumns = `repeat(${width}, minmax(40px, 1fr))`;
+  boardEl.innerHTML = cells.join('');
 
   document.querySelectorAll('.cell').forEach((cell) => {
     cell.addEventListener('click', () => {
