@@ -6,17 +6,19 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-key-change-me')
 DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
 
-allowed_hosts = os.getenv(
-    'DJANGO_ALLOWED_HOSTS',
-    '127.0.0.1,localhost,do-fu-ioh.onrender.com'
-)
-ALLOWED_HOSTS = [h.strip() for h in allowed_hosts.split(',') if h.strip()]
+ALLOWED_HOSTS = [
+    'do-fu-ioh.onrender.com',
+    '.onrender.com',
+    '127.0.0.1',
+    'localhost',
+]
 
-trusted_origins = os.getenv(
-    'CSRF_TRUSTED_ORIGINS',
-    'http://127.0.0.1:8000,http://localhost:8000,https://do-fu-ioh.onrender.com'
-)
-CSRF_TRUSTED_ORIGINS = [o.strip() for o in trusted_origins.split(',') if o.strip()]
+CSRF_TRUSTED_ORIGINS = [
+    'https://do-fu-ioh.onrender.com',
+    'https://*.onrender.com',
+    'http://127.0.0.1:8000',
+    'http://localhost:8000',
+]
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -75,3 +77,25 @@ CSRF_COOKIE_SECURE = not DEBUG
 X_FRAME_OPTIONS = 'DENY'
 SECURE_CONTENT_TYPE_NOSNIFF = True
 LOGIN_URL = '/'
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'loggers': {
+        'django.security.DisallowedHost': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+        'django.request': {
+            'handlers': ['console'],
+            'level': 'ERROR',
+            'propagate': False,
+        },
+    },
+}
