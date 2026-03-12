@@ -6,10 +6,16 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = os.getenv('DJANGO_SECRET_KEY', 'dev-secret-key-change-me')
 DEBUG = os.getenv('DJANGO_DEBUG', 'False').lower() == 'true'
 
-allowed_hosts = os.getenv('DJANGO_ALLOWED_HOSTS', '127.0.0.1,localhost,testserver,.onrender.com')
+allowed_hosts = os.getenv(
+    'DJANGO_ALLOWED_HOSTS',
+    '127.0.0.1,localhost,do-fu-ioh.onrender.com'
+)
 ALLOWED_HOSTS = [h.strip() for h in allowed_hosts.split(',') if h.strip()]
 
-trusted_origins = os.getenv('CSRF_TRUSTED_ORIGINS', 'http://127.0.0.1:8000,http://localhost:8000,https://*.onrender.com')
+trusted_origins = os.getenv(
+    'CSRF_TRUSTED_ORIGINS',
+    'http://127.0.0.1:8000,http://localhost:8000,https://do-fu-ioh.onrender.com'
+)
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in trusted_origins.split(',') if o.strip()]
 
 INSTALLED_APPS = [
