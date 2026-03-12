@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Do-Fu-Ióh</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'core/css/styles.css' %}" />
+</head>
+<body>
+  <main class="app-shell">
+    <section class="hero panel">
+      <div>
+        <p class="eyebrow">Django + Supabase + Render</p>
+        <h1>Do-Fu-Ióh</h1>
+        <p>Juego de cartas por turnos inspirado en las familias de monstruos cargadas desde tu documento y reutilizando la base técnica del proyecto de ajedrez.</p>
+      </div>
+      <div class="hero-actions">
+        <button id="refresh-state">Refrescar partida</button>
+        <button id="create-match">Crear sala</button>
+        <input id="join-room-code" placeholder="Código de sala" maxlength="8" />
+        <button id="join-match">Unirse</button>
+      </div>
+    </section>
+
+    <section class="grid two-cols">
+      <div class="panel">
+        <h2>Cuenta</h2>
+        <div class="stack auth-box">
+          <input id="username" placeholder="Usuario" />
+          <input id="email" placeholder="Correo" />
+          <input id="password" placeholder="Contraseña" type="password" />
+          <div class="row">
+            <button id="register-btn">Registrarme</button>
+            <button id="login-btn">Ingresar</button>
+            <button id="logout-btn" class="ghost">Salir</button>
+          </div>
+          <p id="auth-status">Todavía no iniciaste sesión.</p>
+        </div>
+      </div>
+      <div class="panel">
+        <h2>Cartas cargadas</h2>
+        <div class="catalog-toolbar">
+          <select id="family-filter"><option value="">Todas las familias</option></select>
+        </div>
+        <div id="catalog" class="catalog"></div>
+      </div>
+    </section>
+
+    <section class="grid two-cols">
+      <div class="panel">
+        <h2>Tu mano</h2>
+        <div id="hand" class="card-row"></div>
+      </div>
+      <div class="panel">
+        <h2>Estado de la partida</h2>
+        <div id="match-summary" class="stack small"></div>
+      </div>
+    </section>
+
+    <section class="grid board-grid">
+      <div class="panel">
+        <h3>Campo rival</h3>
+        <div id="enemy-board" class="lanes"></div>
+      </div>
+      <div class="panel">
+        <h3>Tu campo</h3>
+        <div id="player-board" class="lanes"></div>
+      </div>
+      <div class="panel">
+        <h3>Acciones</h3>
+        <div class="stack">
+          <label>Carta de mano índice <input id="hand-index" type="number" min="0" value="0" /></label>
+          <label>Carril <select id="lane-select"><option value="top">Top</option><option value="mid">Mid</option><option value="bot">Bot</option></select></label>
+          <button id="summon-btn">Invocar</button>
+          <hr />
+          <label>Desde <select id="from-lane"><option value="top">Top</option><option value="mid">Mid</option><option value="bot">Bot</option></select></label>
+          <label>Objetivo <select id="target-lane"><option value="top">Top</option><option value="mid">Mid</option><option value="bot">Bot</option></select></label>
+          <button id="move-btn">Mover</button>
+          <button id="attack-btn">Atacar</button>
+          <button id="end-turn-btn" class="ghost">Terminar turno</button>
+        </div>
+      </div>
+    </section>
+
+    <section class="panel">
+      <h2>Log</h2>
+      <div id="log" class="log"></div>
+    </section>
+  </main>
+  <script src="{% static 'core/js/game.js' %}"></script>
+</body>
+</html>
