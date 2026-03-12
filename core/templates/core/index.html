@@ -8,25 +8,16 @@
   <link rel="stylesheet" href="{% static 'core/css/styles.css' %}" />
 </head>
 <body>
-  <main class="app-shell">
-    <section class="hero panel">
-      <div>
-        <p class="eyebrow">Do-Fu-Ióh · Tablero táctico</p>
-        <h1>Duelo de cartas en arena</h1>
-        <p>Jugá libre contra la IA sin cuenta, o iniciá sesión para acceder a salas y funciones de perfil.</p>
-      </div>
-      <div class="hero-actions">
-        <button id="refresh-state" class="ghost">Refrescar partida</button>
-        <button id="create-ai-match">Jugar vs IA (sin registro)</button>
-        <button id="create-match">Crear sala PVP</button>
-        <input id="join-room-code" placeholder="Código de sala" maxlength="8" />
-        <button id="join-match">Unirse</button>
-      </div>
-    </section>
+  <main class="arcade-shell">
+    <aside class="side-column left-column">
+      <section class="panel intro-panel">
+        <p class="kicker">Arcade Protocols</p>
+        <h1>DO-FU-IÓH</h1>
+        <p>Jugá partidas tácticas con o sin cuenta. En modo invitado podés enfrentar a la IA al instante.</p>
+      </section>
 
-    <section class="grid two-cols">
-      <div class="panel">
-        <h2>Cuenta (opcional)</h2>
+      <section class="panel compact-panel">
+        <h2>Acceso opcional</h2>
         <div class="stack auth-box">
           <input id="username" placeholder="Usuario" />
           <input id="email" placeholder="Correo" />
@@ -38,41 +29,60 @@
           </div>
           <p id="auth-status">Modo invitado activo. Podés jugar vs IA sin registrarte.</p>
         </div>
-      </div>
-      <div class="panel">
-        <h2>Cartas</h2>
+      </section>
+
+      <section class="panel compact-panel">
+        <h2>Cartas disponibles</h2>
         <div class="catalog-toolbar">
           <select id="family-filter"><option value="">Todas las familias</option></select>
         </div>
         <div id="catalog" class="catalog"></div>
-      </div>
+      </section>
+    </aside>
+
+    <section class="center-column panel board-panel">
+      <header class="board-header">
+        <h2>Tablero</h2>
+        <p>Casilla clara · Casilla oscura · Seleccioná carta o unidad y hacé clic para ejecutar.</p>
+      </header>
+      <div id="board" class="board"></div>
+      <footer class="board-footer">
+        <div><strong>Último movimiento:</strong> revisar panel de historial.</div>
+        <div><strong>Modo:</strong> local / online casual.</div>
+      </footer>
     </section>
 
-    <section class="grid match-layout">
-      <div class="panel">
-        <h2>Tablero táctico 12x15</h2>
-        <p class="small">Clic en carta de tu mano para invocar. Clic en unidad propia para mover/atacar.</p>
-        <div id="board" class="board"></div>
-      </div>
-      <div class="stack">
-        <div class="panel">
-          <h2>Tu mano</h2>
-          <div id="hand" class="card-row"></div>
-        </div>
-        <div class="panel">
-          <h2>Estado y selección</h2>
-          <div id="match-summary" class="stack small"></div>
+    <aside class="side-column right-column">
+      <section class="panel compact-panel">
+        <h2>Consola rápida</h2>
+        <div class="stack">
+          <button id="create-ai-match">Jugar vs IA (sin registro)</button>
+          <button id="create-match">Crear sala PVP</button>
+          <input id="join-room-code" placeholder="Código de sala" maxlength="8" />
+          <button id="join-match">Unirse a sala</button>
+          <button id="refresh-state" class="ghost">Refrescar partida</button>
           <button id="end-turn-btn" class="ghost">Terminar turno</button>
         </div>
-        <div class="panel">
-          <h2>Unidades</h2>
-          <div id="unit-list" class="stack small"></div>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section class="panel">
-      <h2>Log</h2>
+      <section class="panel compact-panel">
+        <h2>Estado y selección</h2>
+        <div id="match-summary" class="stack small"></div>
+      </section>
+
+      <section class="panel compact-panel">
+        <h2>Tu mano</h2>
+        <div id="hand" class="card-row"></div>
+      </section>
+
+      <section class="panel compact-panel">
+        <h2>Unidades en juego</h2>
+        <div id="unit-list" class="stack small"></div>
+      </section>
+    </aside>
+
+    <section class="panel bottom-panel">
+      <h2>Historial</h2>
       <div id="log" class="log"></div>
     </section>
   </main>
