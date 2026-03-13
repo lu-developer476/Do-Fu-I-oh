@@ -150,7 +150,6 @@ function renderStaticBoard() {
       const squareClass = (x + y) % 2 === 0 ? 'square-light' : 'square-dark';
       cells.push(`
         <div class="cell ${squareClass} empty preview-cell">
-          <div class="coord">${x},${y}</div>
           <div class="small">·</div>
         </div>
       `);
@@ -249,7 +248,6 @@ function renderBoard() {
 
       cells.push(`
         <button class="cell ${squareClass} ${ownerClass} ${deployClass} ${hintClass} ${isSelected ? 'selected' : ''}" data-x="${x}" data-y="${y}">
-          <div class="coord">${x},${y}</div>
           ${unit
             ? `<div class="token"><strong>${unit.card.name}</strong><span>#${shortId(unit.id)}</span><span>PdV ${unit.hp_current} · PdC ${unit.shell_current}</span><span>PA ${unit.pa_current} · PM ${unit.pm_current}</span></div>`
             : '<div class="small">·</div>'}
@@ -339,6 +337,7 @@ async function loadCards() {
     cards = localSeedCards();
   }
 
+  if (!cards.length) cards = localSeedCards();
   appState.cards = cards;
   const families = [...new Set(cards.map((card) => card.family))];
   familyFilter.innerHTML = '<option value="">Todas las familias</option>' + families.map((f) => `<option value="${f}">${f}</option>`).join('');
