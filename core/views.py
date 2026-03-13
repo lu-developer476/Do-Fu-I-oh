@@ -1,4 +1,6 @@
 import json
+import logging
+import os
 import random
 import secrets
 import threading
@@ -6,6 +8,7 @@ import time
 from copy import deepcopy
 from pathlib import Path
 
+from django.conf import settings
 from django.contrib.auth.models import User
 from django.core.management import call_command
 from django.db import connection
@@ -33,7 +36,9 @@ REQUIRED_AUTH_TABLES = {'auth_user', 'django_session'}
 _schema_bootstrap_lock = threading.Lock()
 _schema_bootstrap_attempted = False
 _schema_bootstrap_last_attempt = 0.0
+_schema_bootstrap_last_error = ''
 SCHEMA_BOOTSTRAP_RETRY_SECONDS = 15
+logger = logging.getLogger(__name__)
 
 
 def _coerce_int(value, default):
@@ -108,7 +113,7 @@ def _auth_schema_is_ready():
 
 
 def _try_bootstrap_schema_once():
-    global _schema_bootstrap_attempted, _schema_bootstrap_last_attempt
+    global _schema_bootstrap_attempted, _schema_bootstrap_last_attempt, _schema_bootstrap_last_error
 
     if _schema_bootstrap_attempted:
         return
@@ -129,9 +134,28 @@ def _try_bootstrap_schema_once():
         try:
             call_command('migrate', interactive=False, run_syncdb=True, verbosity=0)
             _schema_bootstrap_attempted = _game_schema_is_ready() and _auth_schema_is_ready()
-        except Exception:
-            # Si Render no puede migrar en runtime, dejamos que la API responda con 503 amigable.
-            pass
+            _schema_bootstrap_last_error = ''
+        except Exception as exc:
+            _schema_bootstrap_last_error = str(exc)
+            logger.exception('No se pudo ejecutar migrate automáticamente en runtime.')
+
+
+def _schema_diagnostics(include_auth=False):
+    diagnostics = []
+    env_database_url = os.getenv('DATABASE_URL', '')
+    if not env_database_url:
+        diagnostics.append('DATABASE_URL no está definida en el entorno runtime.')
+    elif env_database_url.startswith('sqlite') and not settings.DEBUG:
+        diagnostics.append('Se está usando SQLite en producción. Configurá DATABASE_URL de Supabase en Render.')
+
+    if include_auth and not _auth_schema_is_ready():
+        diagnostics.append('Faltan tablas de autenticación/sesión (auth_user y/o django_session).')
+    if not _game_schema_is_ready():
+        diagnostics.append('Faltan tablas del juego (core_monstercard/core_deck/core_deckentry/core_matchrecord).')
+    if _schema_bootstrap_last_error:
+        diagnostics.append(f'Último error al auto-migrar: {_schema_bootstrap_last_error}')
+
+    return diagnostics
 
 
 def _ensure_schema_ready(include_auth=False):
@@ -146,11 +170,16 @@ def _ensure_schema_ready(include_auth=False):
     return game_ready and auth_ready
 
 
-def _schema_not_ready_response():
+def _schema_not_ready_response(include_auth=False):
+    diagnostics = _schema_diagnostics(include_auth=include_auth)
+    message = 'La base de datos todavía no está lista.'
+    if diagnostics:
+        message = f"{message} {' '.join(diagnostics)}"
     return JsonResponse(
         {
             'status': 'error',
-            'message': 'La base de datos todavía no está lista. Ejecutá migraciones y reintentá.',
+            'message': message,
+            'diagnostics': diagnostics,
         },
         status=503,
     )
@@ -671,7 +700,7 @@ def create_match(request):
 @csrf_exempt
 def create_match_vs_ai(request):
     if not _ensure_schema_ready(include_auth=True):
-        return _schema_not_ready_response()
+        return _schema_not_ready_response(include_auth=True)
 
     host_user = _get_or_create_system_user(SOLO_PLAYER_USERNAME)
     ai_user = _get_or_create_system_user(AI_USERNAME)
