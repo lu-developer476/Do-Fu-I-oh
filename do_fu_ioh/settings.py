@@ -10,10 +10,19 @@ def _split_env_list(value):
     return [item.strip() for item in value.split(',') if item.strip()]
 
 
-ALLOWED_HOSTS = _split_env_list(os.getenv(
-    'DJANGO_ALLOWED_HOSTS',
-    'do-fu-ioh.onrender.com,.onrender.com,127.0.0.1,localhost',
-))
+def _merge_unique(*groups):
+    merged = []
+    for group in groups:
+        for item in group:
+            if item not in merged:
+                merged.append(item)
+    return merged
+
+
+ALLOWED_HOSTS = _merge_unique(
+    _split_env_list(os.getenv('DJANGO_ALLOWED_HOSTS', '')),
+    ['do-fu-ioh.onrender.com', '.onrender.com', '127.0.0.1', 'localhost'],
+)
 
 CSRF_TRUSTED_ORIGINS = _split_env_list(os.getenv(
     'CSRF_TRUSTED_ORIGINS',
