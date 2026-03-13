@@ -6,6 +6,7 @@ from pathlib import Path
 
 from django.conf import settings
 from django.contrib.auth.models import User
+from django.db.utils import OperationalError, ProgrammingError
 from django.http import JsonResponse
 from django.shortcuts import render
 from django.views.decorators.csrf import csrf_exempt
@@ -68,7 +69,14 @@ def _serialize_card(card):
 
 
 def _ensure_cards_seeded():
-    if MonsterCard.objects.exists() or not CARDS_DATA_PATH.exists():
+    if not CARDS_DATA_PATH.exists():
+        return
+
+    try:
+        if MonsterCard.objects.exists():
+            return
+    except (ProgrammingError, OperationalError):
+        # Puede ocurrir al bootear en entornos donde las migraciones aún no corrieron.
         return
 
     cards = json.loads(CARDS_DATA_PATH.read_text(encoding='utf-8'))
