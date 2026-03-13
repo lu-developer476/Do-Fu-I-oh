@@ -14,6 +14,7 @@ from django.contrib.sessions.models import Session
 from django.core.management import call_command
 from django.db import connection
 from django.db.utils import OperationalError, ProgrammingError
+from django.db.migrations.recorder import MigrationRecorder
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
 from django.shortcuts import render
@@ -114,6 +115,14 @@ def _table_exists(table_name):
     return table_name in tables
 
 
+def _can_connect_to_database():
+    try:
+        connection.ensure_connection()
+    except OperationalError:
+        return False
+    return True
+
+
 def _model_query_works(model):
     try:
         model.objects.exists()
@@ -163,12 +172,37 @@ def _try_bootstrap_schema_once():
         _schema_bootstrap_last_attempt = now_ts
 
         try:
+            if not _can_connect_to_database():
+                _schema_bootstrap_last_error = 'No se pudo conectar a PostgreSQL con la DATABASE_URL configurada.'
+                return
+
             call_command('migrate', interactive=False, run_syncdb=True, verbosity=0)
+            if not _game_schema_is_ready():
+                _repair_core_migration_state_if_needed()
             _schema_bootstrap_attempted = _game_schema_is_ready() and _auth_schema_is_ready()
             _schema_bootstrap_last_error = ''
         except Exception as exc:
             _schema_bootstrap_last_error = str(exc)
             logger.exception('No se pudo ejecutar migrate automáticamente en runtime.')
+
+
+def _repair_core_migration_state_if_needed():
+    missing_game_tables = [table_name for table_name in REQUIRED_GAME_TABLES if not _table_exists(table_name)]
+    if not missing_game_tables:
+        return
+
+    recorder = MigrationRecorder(connection)
+    applied_migrations = recorder.applied_migrations()
+    core_initial_applied = ('core', '0001_initial') in applied_migrations
+    if not core_initial_applied:
+        return
+
+    logger.warning(
+        'Se detectó estado inconsistente de migraciones de core: 0001_initial figura aplicada pero faltan tablas (%s).',
+        ', '.join(sorted(missing_game_tables)),
+    )
+    call_command('migrate', 'core', 'zero', fake=True, interactive=False, verbosity=0)
+    call_command('migrate', 'core', interactive=False, verbosity=0)
 
 
 def _schema_diagnostics(include_auth=False):
@@ -181,6 +215,12 @@ def _schema_diagnostics(include_auth=False):
         diagnostics.append('Se está usando SQLite en producción. Configurá DATABASE_URL de Supabase en Render.')
     elif raw_database_url.startswith('DATABASE_URL='):
         diagnostics.append('En Render, cargá solo el valor en DATABASE_URL (sin el prefijo DATABASE_URL=).')
+
+    if not _can_connect_to_database():
+        diagnostics.append('No se pudo conectar a la base de datos con la DATABASE_URL actual.')
+        if _schema_bootstrap_last_error:
+            diagnostics.append(f'Último error al auto-migrar: {_schema_bootstrap_last_error}')
+        return diagnostics
 
     if include_auth and not _auth_schema_is_ready():
         diagnostics.append('Faltan tablas de autenticación/sesión (auth_user y/o django_session).')
