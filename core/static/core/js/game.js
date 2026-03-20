@@ -137,6 +137,12 @@ function buildCoordinateLabel(x, y) {
   return `${String.fromCharCode(65 + x)}${y + 1}`;
 }
 
+function syncSelectedUnit(me) {
+  const selectedUnitExists = Boolean(me?.units?.some((u) => u.id === appState.selectedUnitId));
+  if (!selectedUnitExists) appState.selectedUnitId = null;
+  return me?.units?.find((u) => u.id === appState.selectedUnitId) || null;
+}
+
 function getSelectionSummary({ selectedHandCard, selectedUnit, canPlay }) {
   if (selectedHandCard) {
     return canPlay
@@ -233,7 +239,7 @@ function renderBoard() {
   const width = appState.match.board?.width || DEFAULT_BOARD_WIDTH;
   const height = appState.match.board?.height || DEFAULT_BOARD_HEIGHT;
   const canPlay = isMyTurn(mySide);
-  const selectedUnit = me?.units?.find((u) => u.id === appState.selectedUnitId) || null;
+  const selectedUnit = syncSelectedUnit(me);
   const selectedHandCard = me?.hand?.[appState.selectedHandIndex] || null;
   const moveTargets = computeMoveTargets(selectedUnit, me?.units || [], enemy?.units || [], width, height);
   const attackTargets = computeAttackTargets(selectedUnit, enemy?.units || []);
@@ -263,7 +269,7 @@ function renderBoard() {
           <div class="cell-layer">
             ${unit
               ? `
-                <div class="token ${ownUnit ? 'token-ally' : 'token-enemy'}">
+                <div class="token ${ownUnit ? 'token-ally' : 'token-enemy'} ${selectedClass ? 'token-selected' : ''}">
                   <div class="token-portrait-wrap">
                     <img src="${unit.card.image}" alt="${unit.card.name}" />
                   </div>

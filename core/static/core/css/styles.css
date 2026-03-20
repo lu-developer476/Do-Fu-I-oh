@@ -144,7 +144,8 @@ input, select {
   background: var(--square-light);
   transition: transform .12s ease, box-shadow .12s ease, border-color .12s ease, filter .12s ease;
   box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 4px 8px var(--cell-shadow);
-  overflow: hidden;
+  overflow: visible;
+  isolation: isolate;
 }
 
 .cell.square-dark { background: var(--square-dark); }
@@ -152,9 +153,10 @@ input, select {
 .cell.ally { border-color: rgba(100, 250, 169, .55); }
 .cell.enemy { border-color: rgba(255, 137, 125, .55); }
 .cell.selected {
-  box-shadow: inset 0 0 0 3px rgba(255, 224, 130, .9), 0 0 0 2px rgba(255, 224, 130, .35), 0 8px 18px rgba(0,0,0,.28);
-  transform: translateY(-1px) scale(1.01);
-  z-index: 2;
+  border-color: rgba(255, 224, 130, .95);
+  box-shadow: inset 0 0 0 3px rgba(255, 224, 130, .95), 0 0 0 2px rgba(255, 224, 130, .38), 0 12px 24px rgba(0,0,0,.32);
+  transform: translateY(-2px);
+  z-index: 6;
 }
 .cell.hint-summon {
   box-shadow: inset 0 0 0 3px rgba(119, 242, 162, .95), inset 0 0 24px rgba(119, 242, 162, .18), 0 4px 8px var(--cell-shadow);
@@ -198,18 +200,39 @@ input, select {
 
 .token {
   position: relative;
+  z-index: 1;
   min-height: 100%;
   display: grid;
   grid-template-rows: auto auto 1fr;
   gap: 4px;
   align-content: start;
   padding: 18px 4px 4px;
-  border-radius: 8px;
+  border-radius: 18px 18px 14px 14px;
+  border: 1px solid rgba(255,255,255,.08);
   background: linear-gradient(180deg, rgba(16, 21, 14, .08), rgba(16, 21, 14, .2));
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.08);
+  transform-origin: center bottom;
+  transition: transform .14s ease, box-shadow .14s ease, border-color .14s ease;
+}
+
+.token::before {
+  content: "";
+  position: absolute;
+  inset: 6px 18px auto;
+  height: 14px;
+  border-radius: 999px 999px 8px 8px;
+  background: linear-gradient(180deg, rgba(255,255,255,.18), rgba(255,255,255,0));
+  pointer-events: none;
 }
 
 .token-ally { background: linear-gradient(180deg, rgba(59, 148, 108, .2), rgba(16, 21, 14, .22)); }
 .token-enemy { background: linear-gradient(180deg, rgba(168, 79, 65, .2), rgba(16, 21, 14, .22)); }
+.token-selected {
+  z-index: 3;
+  border-color: rgba(255, 224, 130, .95);
+  box-shadow: 0 18px 22px rgba(0,0,0,.34), 0 0 0 3px rgba(255, 224, 130, .28), inset 0 1px 0 rgba(255,255,255,.2);
+  transform: translateY(-4px) scale(1.08);
+}
 
 .token-portrait-wrap {
   display: grid;
@@ -217,13 +240,13 @@ input, select {
 }
 
 .token img {
-  width: clamp(34px, 60%, 52px);
+  width: clamp(38px, 68%, 58px);
   aspect-ratio: 1;
   object-fit: cover;
-  border-radius: 10px;
-  border: 2px solid rgba(255,255,255,.18);
+  border-radius: 50%;
+  border: 3px solid rgba(255,255,255,.2);
   background: rgba(22, 32, 18, .45);
-  box-shadow: 0 5px 10px rgba(0,0,0,.24);
+  box-shadow: 0 7px 14px rgba(0,0,0,.28);
 }
 
 .token-name {
