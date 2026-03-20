@@ -1,8 +1,6 @@
 # Do-Fu-Ióh
 
-Do-Fu-Ióh hoy es un **MVP single-player de combate táctico por turnos contra una IA básica**, hecho con Django y una UI server-rendered con JavaScript vanilla. No hay matchmaking real, no hay PvP online, no hay login obligatorio y no hay construcción de mazos por usuario: el juego corre como una partida asociada a la **sesión HTTP actual**.
-
-La idea de este README es describir **lo que ya está implementado**, no la visión futura.
+Es un **MVP single-player de combate táctico por turnos contra una IA básica**, hecho con Django y una UI server-rendered con JavaScript vanilla. Sin matchmaking real, PvP online y login obligatorio: el juego corre como una partida asociada a la **sesión HTTP actual**.
 
 ## Estado actual del proyecto
 
@@ -16,15 +14,6 @@ La idea de este README es describir **lo que ya está implementado**, no la visi
 - Resolución automática del turno enemigo con una **IA heurística básica**.
 - Reglas mínimas de energía, movimiento, ataque, robo y condición de victoria.
 - Deploy preparado para Render con Gunicorn, WhiteNoise y Postgres.
-
-### Qué no está implementado hoy
-
-- Login o registro para jugar.
-- PvP entre dos personas.
-- Matchmaking, salas compartidas o invitaciones.
-- Construcción/edición de mazos desde la UI.
-- Efectos complejos de cartas, habilidades especiales o evoluciones en partida.
-- Tiempo real, websockets o sincronización multiusuario.
 
 ## Stack real
 
@@ -322,6 +311,15 @@ La configuración real del repo usa:
 - No hay observadores, replay ni analíticas.
 - No hay tests end-to-end de navegador; la cobertura actual está concentrada en backend/reglas.
 
+### Qué no está implementado hoy
+
+- Login o registro para jugar.
+- PvP entre dos personas.
+- Matchmaking, salas compartidas o invitaciones.
+- Construcción/edición de mazos desde la UI.
+- Efectos complejos de cartas, habilidades especiales o evoluciones en partida.
+- Tiempo real, websockets o sincronización multiusuario.
+
 ## Próximos pasos sugeridos
 
 1. **Alinear modelos con el producto actual**: separar mejor actores del sistema, sesión de juego y futuros usuarios reales.
@@ -334,17 +332,3 @@ La configuración real del repo usa:
 8. **Preparar multiplayer real** recién después de estabilizar reglas y estado de partida.
 9. **Agregar observabilidad**: logs de errores, métricas básicas y trazabilidad de acciones de partida.
 10. **Sumar tests de UI** para validar flujo completo desde el navegador.
-
-## Resumen corto para quien llega al repo
-
-Si abrís este repo hoy, lo que vas a encontrar es esto:
-
-- una app Django,
-- una interfaz web única,
-- un juego táctico por turnos muy inicial,
-- una sola modalidad jugable: **humano vs IA**,
-- reglas básicas de invocación / movimiento / ataque,
-- estado persistido en DB por sesión,
-- deploy listo para Render.
-
-Ese es el producto real actual.
