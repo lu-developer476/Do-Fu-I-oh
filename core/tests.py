@@ -12,11 +12,14 @@ from .views import _ai_turn
 
 
 class CardsCatalogSeedTests(TestCase):
-    def test_catalog_is_available_without_view_level_seeding(self):
+    def test_cards_endpoint_does_not_seed_catalog_implicitly(self):
+        MonsterCard.objects.all().delete()
+
         response = self.client.get('/api/cards/')
 
         self.assertEqual(response.status_code, 200)
-        self.assertTrue(response.json()['cards'])
+        self.assertEqual(response.json()['cards'], [])
+        self.assertFalse(MonsterCard.objects.exists())
 
     def test_management_command_seeds_when_catalog_is_empty(self):
         MonsterCard.objects.all().delete()
@@ -25,6 +28,15 @@ class CardsCatalogSeedTests(TestCase):
 
         self.assertTrue(MonsterCard.objects.exists())
 
+    def test_management_command_is_idempotent(self):
+        MonsterCard.objects.all().delete()
+
+        call_command('seed_cards_catalog')
+        first_count = MonsterCard.objects.count()
+
+        call_command('seed_cards_catalog')
+
+        self.assertEqual(MonsterCard.objects.count(), first_count)
 
 
 class UserProfileSignalTests(TestCase):
