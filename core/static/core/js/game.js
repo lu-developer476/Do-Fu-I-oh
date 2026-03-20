@@ -134,7 +134,7 @@ function computeAttackTargets(selectedUnit, enemyUnits) {
 }
 
 function buildCoordinateLabel(x, y) {
-  return `${String.fromCharCode(65 + x)}${y + 1}`;
+  return `${x}:${y}`;
 }
 
 function syncSelectedUnit(me) {
@@ -264,7 +264,7 @@ function renderBoard() {
       const coordinate = buildCoordinateLabel(x, y);
 
       cells.push(`
-        <button class="cell ${squareClass} ${ownUnit ? 'ally' : enemyUnit ? 'enemy' : 'empty'} ${deployClass} ${hintClass} ${selectedClass} ${interactiveClass}" data-x="${x}" data-y="${y}" aria-label="Casilla ${coordinate}">
+        <button class="cell ${squareClass} ${ownUnit ? 'ally has-unit' : enemyUnit ? 'enemy has-unit' : 'empty'} ${deployClass} ${hintClass} ${selectedClass} ${interactiveClass}" data-x="${x}" data-y="${y}" aria-label="Casilla ${coordinate}">
           <span class="cell-coord">${coordinate}</span>
           <div class="cell-layer">
             ${unit
