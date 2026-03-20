@@ -384,6 +384,17 @@ function createSummaryField(label, value, className = '') {
   return item;
 }
 
+function formatSideLabel(side) {
+  if (side === 'host') return 'Jugador';
+  if (side === 'guest') return 'IA';
+  return side || '-';
+}
+
+function calculatePlayerLife(player = {}) {
+  const units = Array.isArray(player.units) ? player.units : [];
+  return units.reduce((total, unit) => total + Math.max(0, Number(unit.hp_current) || 0), 0);
+}
+
 function createUnitListEntry(unit) {
   const item = document.createElement('div');
   item.className = 'unit-entry';
@@ -663,11 +674,13 @@ function renderMatchSummary({ me, enemy, selectedHandCard, selectedUnit, canPlay
 
   summaryEl.append(
     createSummaryField('Turno', appState.match.turn?.number || 1),
-    createSummaryField('Activo', appState.match.turn?.active_side || '-'),
-    createSummaryField('Energía', `${me?.energy ?? '-'}/${me?.max_energy ?? '-'}`),
-    createSummaryField('IA', `${enemy?.energy ?? '-'}/${enemy?.max_energy ?? '-'}`),
-    createSummaryField('Mano / mazo', `${me?.hand_count ?? '-'} / ${me?.library_count ?? '-'}`),
-    createSummaryField('Ganador', appState.match.winner || 'sin definir')
+    createSummaryField('Lado activo', formatSideLabel(appState.match.turn?.active_side)),
+    createSummaryField('Vida jugador', calculatePlayerLife(me)),
+    createSummaryField('Vida IA', calculatePlayerLife(enemy)),
+    createSummaryField('Energía actual / máxima', `${me?.energy ?? '-'}/${me?.max_energy ?? '-'}`),
+    createSummaryField('Cartas en mano', me?.hand_count ?? '-'),
+    createSummaryField('Cartas en mazo', me?.library_count ?? '-'),
+    createSummaryField('Ganador', appState.match.winner ? formatSideLabel(appState.match.winner) : 'sin definir')
   );
 
   const selection = createSummaryField('Selección', getSelectionSummary({ selectedHandCard, selectedUnit, canPlay }), 'selection-summary');
