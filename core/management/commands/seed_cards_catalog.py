@@ -1,14 +1,20 @@
 from django.core.management.base import BaseCommand
 
-from ...card_catalog import sync_monster_cards
+from ...card_catalog import import_monster_cards
 
 
 class Command(BaseCommand):
-    help = 'Seed inicial del catálogo de cartas si la tabla MonsterCard está vacía.'
+    help = 'Carga o actualiza el catálogo de cartas desde data/cards.json.'
 
     def handle(self, *args, **options):
-        created = sync_monster_cards()
-        if created:
-            self.stdout.write(self.style.SUCCESS(f'Se cargaron {created} cartas.'))
-            return
-        self.stdout.write('No se cargaron cartas: el catálogo ya existía o no había datos disponibles.')
+        self.stdout.write('[INFO] Iniciando importación de cartas desde data/cards.json...')
+        stats = import_monster_cards(stdout=self.stdout)
+        self.stdout.write(
+            self.style.SUCCESS(
+                '[DONE] Importación finalizada. '
+                f'Procesadas: {stats.processed} | '
+                f'Creadas: {stats.created} | '
+                f'Actualizadas: {stats.updated} | '
+                f'Omitidas: {stats.skipped}'
+            )
+        )
