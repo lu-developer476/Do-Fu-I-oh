@@ -150,6 +150,15 @@ function buildCoordinateLabel(x, y) {
   return `${x}:${y}`;
 }
 
+function isWithinBoard(x, y, boardWidth = DEFAULT_BOARD_WIDTH, boardHeight = DEFAULT_BOARD_HEIGHT) {
+  return x >= 0 && y >= 0 && x < boardWidth && y < boardHeight;
+}
+
+function describeBoardPosition(x, y, boardWidth = DEFAULT_BOARD_WIDTH, boardHeight = DEFAULT_BOARD_HEIGHT) {
+  if (isWithinBoard(x, y, boardWidth, boardHeight)) return `la casilla ${buildCoordinateLabel(x, y)}`;
+  return `la posición ${buildCoordinateLabel(x, y)} (fuera del tablero ${boardWidth}×${boardHeight})`;
+}
+
 function syncSelectedUnit(me) {
   const selectedUnitExists = Boolean(me?.units?.some((u) => u.id === appState.selectedUnitId));
   if (!selectedUnitExists) appState.selectedUnitId = null;
@@ -216,17 +225,30 @@ function renderStaticBoard() {
   boardEl.innerHTML = cells.join('');
 }
 
-async function sendAction(actionPayload) {
-  const data = await api(`/api/match/${appState.roomCode}/action/`, {
-    method: 'POST',
-    body: JSON.stringify(actionPayload),
-  });
-  appState.match = data.match;
-  renderBoard();
+async function sendAction(actionPayload, failureMessage = 'La acción no pudo resolverse.') {
+  try {
+    const data = await api(`/api/match/${appState.roomCode}/action/`, {
+      method: 'POST',
+      body: JSON.stringify(actionPayload),
+    });
+    appState.match = data.match;
+    renderBoard();
+  } catch (err) {
+    const message = err.message || failureMessage;
+    setActionFeedback(`${failureMessage} ${message}`.trim(), 'error');
+    throw err;
+  }
 }
 
 async function onCellClick(x, y) {
   if (!appState.match || !appState.roomCode) return;
+  const boardWidth = appState.match.board?.width || DEFAULT_BOARD_WIDTH;
+  const boardHeight = appState.match.board?.height || DEFAULT_BOARD_HEIGHT;
+  if (!isWithinBoard(x, y, boardWidth, boardHeight)) {
+    setActionFeedback(`Movimiento inválido: ${describeBoardPosition(x, y, boardWidth, boardHeight)} no existe. Elegí una casilla dentro del tablero.`, 'error');
+    return;
+  }
+
   const { me, enemy, mySide } = resolveSides();
   if (!me || !enemy) return;
   if (!isMyTurn(mySide)) {
@@ -247,15 +269,16 @@ async function onCellClick(x, y) {
     return;
   }
   if (selectedHandCard) {
-    const boardWidth = appState.match.board?.width || DEFAULT_BOARD_WIDTH;
-    const boardHeight = appState.match.board?.height || DEFAULT_BOARD_HEIGHT;
     const deploymentCells = deploymentCellsForSide(mySide, boardWidth, boardHeight);
     const summonKey = `${x},${y}`;
     if (!deploymentCells.has(summonKey) || myUnit || enemyUnit) {
-      setActionFeedback(`Casilla inválida para invocar ${selectedHandCard.name}. Elegí una casilla verde libre de tu zona.`, 'error');
+      setActionFeedback(`Invocación inválida en ${describeBoardPosition(x, y, boardWidth, boardHeight)} para ${selectedHandCard.name}. Elegí una casilla verde libre de tu zona.`, 'error');
       return;
     }
-    await sendAction({ action: 'summon', hand_index: appState.selectedHandIndex, x, y });
+    await sendAction(
+      { action: 'summon', hand_index: appState.selectedHandIndex, x, y },
+      `No se pudo invocar ${selectedHandCard.name} en ${describeBoardPosition(x, y, boardWidth, boardHeight)}.`
+    );
     appState.selectedHandIndex = null;
     setActionFeedback(`${selectedHandCard.name} fue invocada correctamente.`, 'success');
     return;
@@ -268,22 +291,26 @@ async function onCellClick(x, y) {
   if (enemyUnit) {
     const attackTargets = computeAttackTargets(selectedUnit, enemy.units || []);
     if (!attackTargets.has(enemyUnit.id)) {
-      setActionFeedback(`Ataque fuera de rango para ${selectedUnit.card.name}. Elegí un objetivo resaltado en rojo.`, 'error');
+      setActionFeedback(`Objetivo inválido: ${enemyUnit.card.name} en ${describeBoardPosition(x, y, boardWidth, boardHeight)} está fuera del alcance de ${selectedUnit.card.name}. Elegí un objetivo resaltado en rojo.`, 'error');
       return;
     }
-    await sendAction({ action: 'attack', attacker_id: selectedUnit.id, target_id: enemyUnit.id });
+    await sendAction(
+      { action: 'attack', attacker_id: selectedUnit.id, target_id: enemyUnit.id },
+      `No se pudo concretar el ataque de ${selectedUnit.card.name} sobre ${enemyUnit.card.name}.`
+    );
     setActionFeedback(`${selectedUnit.card.name} atacó a ${enemyUnit.card.name}.`, 'success');
     return;
   }
 
-  const boardWidth = appState.match.board?.width || DEFAULT_BOARD_WIDTH;
-  const boardHeight = appState.match.board?.height || DEFAULT_BOARD_HEIGHT;
   const moveTargets = computeMoveTargets(selectedUnit, me.units || [], enemy.units || [], boardWidth, boardHeight);
   if (!moveTargets.has(`${x},${y}`)) {
-    setActionFeedback(`Casilla inválida para mover ${selectedUnit.card.name}. Elegí una casilla azul disponible.`, 'error');
+    setActionFeedback(`Movimiento inválido: ${describeBoardPosition(x, y, boardWidth, boardHeight)} no está disponible para ${selectedUnit.card.name}. Elegí una casilla azul permitida.`, 'error');
     return;
   }
-  await sendAction({ action: 'move', unit_id: selectedUnit.id, to_x: x, to_y: y });
+  await sendAction(
+    { action: 'move', unit_id: selectedUnit.id, to_x: x, to_y: y },
+    `No se pudo mover ${selectedUnit.card.name} hacia ${describeBoardPosition(x, y, boardWidth, boardHeight)}.`
+  );
   setActionFeedback(`${selectedUnit.card.name} se movió a ${buildCoordinateLabel(x, y)}.`, 'success');
 }
 
